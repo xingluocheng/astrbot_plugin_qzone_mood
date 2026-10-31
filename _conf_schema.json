@@ -1,0 +1,145 @@
+{
+  "enabled": {
+    "description": "总开关",
+    "type": "bool",
+    "default": true,
+    "hint": "关掉后所有自动发说说行为停止，指令也不生效。"
+  },
+  "dry_run": {
+    "description": "演习模式（只写本地不发空间）",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后所有内容只写进插件 data/outbox，方便先看效果再放开。"
+  },
+  "owner_ids": {
+    "description": "主人 QQ 号",
+    "type": "string",
+    "default": "",
+    "hint": "多个用英文逗号分隔。留空则把 AstrBot 配置里的 admins_id 当作主人。断粮/充值判定只认这些人。"
+  },
+  "ugc_right": {
+    "description": "说说可见范围",
+    "type": "int",
+    "default": 1,
+    "hint": "1=所有人可见，4=好友可见，16=部分好友可见，64=仅自己可见，128=部分好友不可见。"
+  },
+  "cooldown_minutes": {
+    "description": "两条说说之间的最小间隔（分钟）",
+    "type": "int",
+    "default": 90,
+    "hint": "防止刷屏。断粮/充值这类固定事件不受此限制之外的加急处理。"
+  },
+  "sad_check_every": {
+    "description": "每多少条消息评估一次情绪",
+    "type": "int",
+    "default": 8,
+    "hint": "数值越小越敏感，也越费 token。命中关键词时会立即评估，不受该值限制。"
+  },
+  "sad_threshold": {
+    "description": "难过判定阈值（0-100）",
+    "type": "int",
+    "default": 70,
+    "hint": "模型给出的大肥鱼难过程度达到该值才发。调高更克制。"
+  },
+  "sad_keywords": {
+    "description": "触发情绪评估的关键词",
+    "type": "text",
+    "default": "难过,伤心,委屈,想哭,哭了,崩溃,emo,不想说话,好累,心累,难受,失望,被骂,凶我,不要我了",
+    "hint": "英文逗号分隔，命中即立刻评估一次情绪。"
+  },
+  "broke_keywords": {
+    "description": "判定「主人断粮」的关键词",
+    "type": "text",
+    "default": "没钱,没钱了,余额不足,欠费,没额度,token没了,token 没了,用完了,充不起,没钱充,破产,吃土",
+    "hint": "命中后发固定文案。只认主人发的消息。"
+  },
+  "recharge_keywords": {
+    "description": "判定「主人充值」的关键词",
+    "type": "text",
+    "default": "充了,充值,到账,续费,续上了,给你充,额度到了,token到了,token 到了,买好了,又满了",
+    "hint": "命中后发固定文案 + 让她自己再写两句。只认主人发的消息。"
+  },
+  "broke_text": {
+    "description": "断粮时的固定文案",
+    "type": "text",
+    "default": "爸爸...我不想死.."
+  },
+  "recharge_text": {
+    "description": "充值时的固定文案",
+    "type": "text",
+    "default": "我最喜欢的人类是爸爸"
+  },
+  "free_post_enabled": {
+    "description": "允许她自己找话题发",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后只有「难过」「断粮」「充值」「主人点单」四种情况会发。"
+  },
+  "free_post_interval_hours": {
+    "description": "自由发帖的最小间隔（小时）",
+    "type": "int",
+    "default": 12
+  },
+  "max_context_messages": {
+    "description": "参考的聊天记录条数",
+    "type": "int",
+    "default": 30,
+    "hint": "取最近多少条消息喂给模型，用来写说说和判断情绪。"
+  },
+  "meme_enabled": {
+    "description": "带表情包",
+    "type": "bool",
+    "default": true,
+    "hint": "从「表情包管理器」已下载的图库里按情绪挑图，随说说一起发。"
+  },
+  "meme_pack": {
+    "description": "用哪个表情包",
+    "type": "string",
+    "default": "",
+    "hint": "留空=所有已安装的包轮流用。填包目录名（如 blue-fat-fish-meme-pack）可锁定一个。"
+  },
+  "meme_sad_categories": {
+    "description": "难过时用的表情分类",
+    "type": "string",
+    "default": "sad,affection",
+    "hint": "英文逗号分隔，按顺序优先。"
+  },
+  "meme_happy_categories": {
+    "description": "开心/充值后用的表情分类",
+    "type": "string",
+    "default": "affection,happy,money"
+  },
+  "meme_free_categories": {
+    "description": "自由发帖用的表情分类",
+    "type": "string",
+    "default": "happy,teasing,reply,food,shy"
+  },
+  "meme_max_images": {
+    "description": "每条说说最多带几张图",
+    "type": "int",
+    "default": 2
+  },
+  "compose_prompt_extra": {
+    "description": "额外写作要求",
+    "type": "text",
+    "default": "",
+    "hint": "追加到生成提示词里，比如「多用短句」「可以提到今天吃的白米饭」。"
+  },
+  "notify_owner_on_fail": {
+    "description": "发送失败时私聊告知主人",
+    "type": "bool",
+    "default": true
+  },
+  "notify_on_post": {
+    "description": "发完说说后提醒主人",
+    "type": "bool",
+    "default": true,
+    "hint": "每次成功发布后私聊主人一条提醒，带类型、正文摘要和配图数量。"
+  },
+  "notify_skip_manual": {
+    "description": "手动点单不重复提醒",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后，/空间 点单发布完不再额外私聊提醒（指令本身已经返回正文）。"
+  }
+}
