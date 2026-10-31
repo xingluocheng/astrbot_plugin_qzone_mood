@@ -62,7 +62,7 @@ git clone https://github.com/xingluocheng/astrbot_plugin_qzone_mood.git
 
 | 号 | 是什么 | 在哪改 |
 |---|---|---|
-| **大肥鱼（机器人）的 QQ** | 机器人登录的那个号，空间说说就是用它发的 | **插件里不用填**。它是协议端（SnowLuma / NapCat 等）扫码登录的号，插件自动用当前连接的账号 |
+| **大肥鱼（机器人）的 QQ** | 机器人登录的那个号，空间说说就是用它发的 | 配置项 `bot_ids`。留空 = 自动用协议端当前登录的号；填了就用它校验，`/空间状态` 会对比「配置值 vs 当前登录值」 |
 | **主人的 QQ** | 你的个人号，只有你说的话才会触发「断粮 / 充值」和点单 | 插件的 `owner_ids` 配置 |
 
 ### 改法 A：在面板里改（推荐）
@@ -144,6 +144,7 @@ AstrBot/data/config/astrbot_plugin_qzone_mood_config.json
 | `enabled` | 开 | 总开关 |
 | `dry_run` | 关 | 演习模式，只写本地不发 |
 | `owner_ids` | **空** | **必填**，主人 QQ 号 |
+| `bot_ids` | **空** | 大肥鱼的 QQ；留空自动用登录号，填了做校验 |
 | `ugc_right` | 1 | 1=所有人 4=好友 16=部分好友 64=仅自己 128=部分好友不可见 |
 | `cooldown_minutes` | 90 | 自动触发最小间隔 |
 | `sad_check_every` | 8 | 每多少条消息评估一次情绪 |
