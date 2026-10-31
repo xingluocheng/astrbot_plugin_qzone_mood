@@ -37,6 +37,7 @@ DEFAULTS = {
     "enabled": True,
     "dry_run": False,
     "owner_ids": "",
+    "bot_ids": "",
     "ugc_right": 1,
     "cooldown_minutes": 90,
     "sad_check_every": 8,
@@ -90,6 +91,16 @@ class QzoneMood(Star):
 
     def _owner_ids(self) -> set[str]:
         return set(self._words("owner_ids"))
+
+    def _bot_ids(self) -> set[str]:
+        """大肥鱼（机器人）的 QQ。留空表示自动用当前登录账号。"""
+        return set(self._words("bot_ids"))
+
+    def _current_bot_id(self, event) -> str:
+        try:
+            return str(event.get_self_id() or "")
+        except Exception:
+            return ""
 
     def _is_owner(self, event: AstrMessageEvent) -> bool:
         ids = self._owner_ids()
@@ -428,8 +439,14 @@ class QzoneMood(Star):
         last = float(self.store.get("last_post_ts") or 0)
         left = max(0, int(cooldown - (time.time() - last) / 60)) if last else 0
         cats = memes.available_categories(self.plugin_data_dir)
+        configured_bot = "、".join(sorted(self._bot_ids())) or "（未填，自动用登录号）"
+        current_bot = self._current_bot_id(event) or "获取不到"
+        mismatch = bool(self._bot_ids()) and current_bot not in self._bot_ids() and current_bot != "获取不到"
         lines = [
             f"开关：{'开' if self._cfg('enabled', True) else '关'}｜演习：{'是' if self._cfg('dry_run', False) else '否'}",
+            f"大肥鱼的号：配置={configured_bot}｜当前登录={current_bot}"
+            + ("　⚠ 与配置不一致" if mismatch else ""),
+            f"主人：{'、'.join(sorted(self._owner_ids())) or '未配置'}",
             f"总发送：{self.store.get('post_count', 0)} 条｜最近一次：{self.store.get('last_post_kind') or '还没发过'}",
             f"冷却：{'还剩 ' + str(left) + ' 分钟' if left else '已解除'}",
             f"表情包：{sum(len(v) for v in cats.values())} 个分类 / {len(cats)} 个包",
