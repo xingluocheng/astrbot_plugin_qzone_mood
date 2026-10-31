@@ -11,6 +11,12 @@
     "default": false,
     "hint": "开启后所有内容只写进插件 data/outbox，方便先看效果再放开。"
   },
+  "bot_ids": {
+    "description": "大肥鱼（机器人）的 QQ",
+    "type": "string",
+    "default": "",
+    "hint": "留空 = 自动用协议端当前登录的账号；填了就按这个号校验，发说说仍走已登录账号（OneBot 不能指定发送号）。多个用英文逗号。"
+  },
   "owner_ids": {
     "description": "主人 QQ 号",
     "type": "string",
