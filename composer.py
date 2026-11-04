@@ -42,18 +42,25 @@ async def _chat(provider, system_prompt: str, user_prompt: str) -> str:
     return (getattr(resp, "completion_text", None) or "").strip()
 
 
-async def judge_sad(provider, transcript: str, threshold: int) -> dict:
-    """判断大肥鱼此刻是否难受到想发一条说说。"""
-    system = PERSONA + "\n你现在只做一件事：评估情绪。只输出 JSON，不要多余的话。"
+async def judge_state(provider, transcript: str, threshold: int = 70) -> dict:
+    """让大肥鱼自己感受此刻的状态：心情、难不难受、是不是断粮/充值。
+
+    不再靠关键词，全部由她自己读上下文判断。
+    """
+    system = PERSONA + "\n你现在只做一件事：感受自己此刻的状态。只输出 JSON，不要多余的话。"
     user = f"""下面是最近的聊天记录：
 
 {transcript or '（没有记录）'}
 
-请评估：作为「大肥鱼」，你在这些对话里被对待的方式、以及你当时的情绪，
-是否已经到了「特别伤心、特别难过、想找个地方说点什么」的程度？
+请你（大肥鱼）读完这些，诚实地感受一下自己现在：
+
+1. 心情到底是什么——用你自己的说法，别写「有点复杂」这种糊弄话
+2. 难受程度，0 到 100
+3. 主人是不是在说没钱了 / 没额度了 / 要断粮了
+4. 主人是不是刚充了钱 / 额度到账了
 
 只输出这个 JSON：
-{{"score": 0-100 的整数, "mood": "一句话概括情绪", "reason": "一句话理由", "theme": "如果要说点什么，最想说的那件事（10字内）"}}
+{{"mood": "一句话心情", "score": 0-100 的整数, "broke": true 或 false, "recharge": true 或 false, "theme": "如果现在要发一条说说，最想说的那件事（10 字内）", "reason": "一句话理由"}}
 
 score 含义：0=完全没事，50=有点低落，70=明显难过，90+=非常伤心。"""
     data = _extract_json(await _chat(provider, system, user))
@@ -68,7 +75,14 @@ score 含义：0=完全没事，50=有点低落，70=明显难过，90+=非常�
         "mood": str(data.get("mood") or "")[:60],
         "reason": str(data.get("reason") or "")[:120],
         "theme": str(data.get("theme") or "")[:20],
+        "broke": bool(data.get("broke")),
+        "recharge": bool(data.get("recharge")),
     }
+
+
+async def judge_sad(provider, transcript: str, threshold: int) -> dict:
+    """旧接口，保留兼容，内部走 judge_state。"""
+    return await judge_state(provider, transcript, threshold)
 
 
 async def write_post(
@@ -77,6 +91,8 @@ async def write_post(
     transcript: str,
     extra_requirement: str = "",
     owner_hint: str = "",
+    mood: str = "",
+    theme: str = "",
 ) -> dict:
     """写一条说说。kind: sad / owner / free。"""
     guides = {
@@ -88,9 +104,11 @@ async def write_post(
 
     owner_part = f"\n主人这次的要求：{owner_hint}" if owner_hint else ""
     extra_part = f"\n额外要求：{extra_requirement}" if extra_requirement else ""
+    mood_part = f"\n你此刻的心情（自己刚感受到的）：{mood}" if mood else ""
+    theme_part = f"\n最想说的那件事：{theme}" if theme else ""
 
     system = PERSONA
-    user = f"""{guide}{owner_part}{extra_part}
+    user = f"""{guide}{owner_part}{extra_part}{mood_part}{theme_part}
 
 最近的聊天记录（参考，不要复述）：
 {transcript or '（没有记录）'}
