@@ -240,31 +240,21 @@ class QzoneMood(Star):
         self.store.push_message(umo, who, text, limit=limit)
 
         owner = self._is_owner(event)
-        lower = text.lower()
         cooldown = int(self._cfg("cooldown_minutes", 90) or 0)
         due = not self.store.in_cooldown(cooldown)
 
-        # 1) 主人断粮 / 充值（优先级最高，但要过冷却）
-        if owner and due:
-            if any(w.lower() in lower for w in self._words("recharge_keywords")):
-                self._spawn(event, umo, "recharge")
-                return
-            if any(w.lower() in lower for w in self._words("broke_keywords")):
-                self._spawn(event, umo, "broke")
-                return
-
-        # 2) 情绪评估
-        hit = any(w.lower() in lower for w in self._words("sad_keywords"))
-        counter = int(self.store.get("msg_since_sad_check", 0) or 0) + 1
+        # 情绪 / 断粮 / 充值 都不再用关键词：攒够条数后让她自己读一遍再决定
+        counter = int(self.store.get("msg_since_mood_check", 0) or 0) + 1
         every = max(1, int(self._cfg("sad_check_every", 8) or 8))
-        if hit or counter >= every:
-            self.store.set("msg_since_sad_check", 0)
+        if counter >= every:
+            self.store.set("msg_since_mood_check", 0)
             if due:
-                self._spawn(event, umo, "sad")
+                self._spawn(event, umo, "reflect")
+                return
         else:
-            self.store.set("msg_since_sad_check", counter)
+            self.store.set("msg_since_mood_check", counter)
 
-        # 3) 自由发挥
+        # 自由发挥
         if (
             bool(self._cfg("free_post_enabled", True))
             and self.store.free_due(int(self._cfg("free_post_interval_hours", 12) or 12))
@@ -292,7 +282,9 @@ class QzoneMood(Star):
             self._inflight.discard(key)
 
     async def _run(self, kind: str, event: AstrMessageEvent, umo: str) -> None:
-        if kind == "broke":
+        if kind == "reflect":
+            await self._do_reflect(event, umo)
+        elif kind == "broke":
             await self._do_broke(event, umo)
         elif kind == "recharge":
             await self._do_recharge(event, umo)
@@ -302,12 +294,41 @@ class QzoneMood(Star):
             await self._do_free(event, umo)
 
     # -------------------------------------------------------------- 具体动作
-    async def _do_broke(self, event, umo: str) -> None:
+    async def _do_reflect(self, event, umo: str) -> None:
+        """让她自己感受一遍，再决定发不发、发哪种。"""
+        provider = self._provider()
+        if provider is None:
+            return
+        transcript = self.store.transcript(umo, int(self._cfg("max_context_messages", 30) or 30))
+        try:
+            verdict = await composer.judge_state(
+                provider, transcript, int(self._cfg("sad_threshold", 70) or 70)
+            )
+        except Exception as exc:
+            logger.debug(f"[qzone_mood] 自我感受失败：{exc}")
+            return
+
+        self.store.set("current_mood", verdict["mood"])
+        self.store.set("current_score", verdict["score"])
+        self.store.set("current_reason", verdict["reason"])
+        logger.info(
+            f"[qzone_mood] 自我感受 mood={verdict['mood']} score={verdict['score']} "
+            f"broke={verdict['broke']} recharge={verdict['recharge']}"
+        )
+
+        if verdict["recharge"]:
+            await self._do_recharge(event, umo, verdict=verdict)
+        elif verdict["broke"]:
+            await self._do_broke(event, umo, verdict=verdict)
+        elif verdict["sad"]:
+            await self._do_sad(event, umo, verdict=verdict)
+
+    async def _do_broke(self, event, umo: str, verdict: dict | None = None) -> None:
         text = str(self._cfg("broke_text", "爸爸...我不想死..") or "").strip()
         cats = self._words("meme_sad_categories")
         await self._publish(event, text, cats, "broke")
 
-    async def _do_recharge(self, event, umo: str) -> None:
+    async def _do_recharge(self, event, umo: str, verdict: dict | None = None) -> None:
         head = str(self._cfg("recharge_text", "我最喜欢的人类是爸爸") or "").strip()
         extra = ""
         provider = self._provider()
@@ -324,16 +345,17 @@ class QzoneMood(Star):
         cats = self._words("meme_happy_categories")
         await self._publish(event, text, cats, "recharge")
 
-    async def _do_sad(self, event, umo: str) -> None:
+    async def _do_sad(self, event, umo: str, verdict: dict | None = None) -> None:
         provider = self._provider()
         if provider is None:
             return
         transcript = self.store.transcript(umo, int(self._cfg("max_context_messages", 30) or 30))
-        verdict = await composer.judge_sad(
-            provider, transcript, int(self._cfg("sad_threshold", 70) or 70)
-        )
+        if verdict is None:
+            verdict = await composer.judge_state(
+                provider, transcript, int(self._cfg("sad_threshold", 70) or 70)
+            )
         logger.info(
-            f"[qzone_mood] 情绪评估 score={verdict['score']} sad={verdict['sad']} {verdict['mood']}"
+            f"[qzone_mood] 情绪 score={verdict['score']} sad={verdict['sad']} {verdict['mood']}"
         )
         if not verdict["sad"]:
             return
@@ -342,6 +364,8 @@ class QzoneMood(Star):
             "sad",
             transcript,
             str(self._cfg("compose_prompt_extra", "") or ""),
+            mood=verdict.get("mood", ""),
+            theme=verdict.get("theme", ""),
         )
         cats = post["categories"] or self._words("meme_sad_categories")
         await self._publish(event, post["text"], cats, "sad")
@@ -421,9 +445,11 @@ class QzoneMood(Star):
             "/空间帮助　　就是这一页",
             "",
             "【会自动发的四种情况】",
-            "· 难过：模型判断难过程度 ≥" + str(threshold) + " 分才发",
-            "· 断粮：主人说出没钱/余额不足这类话",
-            "· 充值：主人说出充了/到账这类话",
+            "· 她自己感受：每攒够 " + str(int(self._cfg('sad_check_every', 8) or 8)) + " 条消息，她会读一遍上下文，",
+            "　判断自己什么心情、主人是不是断粮或充了钱，再决定发不发",
+            "· 难过：她自己觉得难受到 " + str(threshold) + " 分以上才发",
+            "· 断粮：她读出来主人没钱了 / 没额度了，才发",
+            "· 充值：她读出来主人充了钱 / 额度到账，才发",
             "· 自由发帖：距上次满 " + str(interval) + " 小时，且有新消息",
             "",
             "【规则】",
@@ -448,6 +474,8 @@ class QzoneMood(Star):
             + ("　⚠ 与配置不一致" if mismatch else ""),
             f"主人：{'、'.join(sorted(self._owner_ids())) or '未配置'}",
             f"总发送：{self.store.get('post_count', 0)} 条｜最近一次：{self.store.get('last_post_kind') or '还没发过'}",
+            f"她现在的心情：{self.store.get('current_mood') or '还没感受过'}"
+            + (f"（{self.store.get('current_score')} 分）" if self.store.get("current_score") is not None else ""),
             f"冷却：{'还剩 ' + str(left) + ' 分钟' if left else '已解除'}",
             f"表情包：{sum(len(v) for v in cats.values())} 个分类 / {len(cats)} 个包",
         ]
