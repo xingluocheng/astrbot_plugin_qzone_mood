@@ -36,34 +36,16 @@
     "hint": "防止刷屏。断粮/充值这类固定事件不受此限制之外的加急处理。"
   },
   "sad_check_every": {
-    "description": "每多少条消息评估一次情绪",
+    "description": "多久让她感受一次心情",
     "type": "int",
     "default": 8,
-    "hint": "数值越小越敏感，也越费 token。命中关键词时会立即评估，不受该值限制。"
+    "hint": "每攒够这么多条消息，她会自己读一遍上下文，感受自己什么心情、主人是不是断粮或充值了，再决定要不要发说说。"
   },
   "sad_threshold": {
-    "description": "难过判定阈值（0-100）",
+    "description": "难受多少分才发",
     "type": "int",
     "default": 70,
-    "hint": "模型给出的大肥鱼难过程度达到该值才发。调高更克制。"
-  },
-  "sad_keywords": {
-    "description": "触发情绪评估的关键词",
-    "type": "text",
-    "default": "难过,伤心,委屈,想哭,哭了,崩溃,emo,不想说话,好累,心累,难受,失望,被骂,凶我,不要我了",
-    "hint": "英文逗号分隔，命中即立刻评估一次情绪。"
-  },
-  "broke_keywords": {
-    "description": "判定「主人断粮」的关键词",
-    "type": "text",
-    "default": "没钱,没钱了,余额不足,欠费,没额度,token没了,token 没了,用完了,充不起,没钱充,破产,吃土",
-    "hint": "命中后发固定文案。只认主人发的消息。"
-  },
-  "recharge_keywords": {
-    "description": "判定「主人充值」的关键词",
-    "type": "text",
-    "default": "充了,充值,到账,续费,续上了,给你充,额度到了,token到了,token 到了,买好了,又满了",
-    "hint": "命中后发固定文案 + 让她自己再写两句。只认主人发的消息。"
+    "hint": "她自己评估的分数达到这个值，才会发一条难过的说说。调高更克制。"
   },
   "broke_text": {
     "description": "断粮时的固定文案",
