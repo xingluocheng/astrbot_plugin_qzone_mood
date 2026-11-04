@@ -165,6 +165,49 @@ class QzoneMood(Star):
                 )
         return result
 
+    # -------------------------------------------------------------- 工具
+    @filter.llm_tool(name="qzone_my_mood")
+    async def tool_my_mood(self, event: AstrMessageEvent) -> str:
+        """主人问她「你现在心情怎么样」「开心吗」「难受吗」时用。
+        返回她此刻真实的心情和难受分数；太久没感受过会现场感受一次。
+        """
+        provider = self._provider()
+        mood = str(self.store.get("current_mood") or "")
+        score = self.store.get("current_score")
+        ts = float(self.store.get("last_mood_ts") or 0)
+        stale = (time.time() - ts) > 900 or not mood
+
+        if stale and provider is not None:
+            try:
+                umo = getattr(event, "unified_msg_origin", None) or event.get_session_id()
+                transcript = self.store.transcript(
+                    umo, int(self._cfg("max_context_messages", 30) or 30)
+                )
+                verdict = await composer.judge_state(
+                    provider, transcript, int(self._cfg("sad_threshold", 70) or 70)
+                )
+                mood = verdict["mood"]
+                score = verdict["score"]
+                self.store.set("current_mood", mood)
+                self.store.set("current_score", score)
+                self.store.set("current_reason", verdict["reason"])
+                self.store.set("last_mood_ts", time.time())
+                logger.info(f"[qzone_mood] 被问心情，现场感受：{mood} {score}")
+            except Exception as exc:
+                logger.debug(f"[qzone_mood] 感受心情失败：{exc}")
+
+        if not mood:
+            return "现在还说不上来，等本鲸再感受一会儿。"
+
+        reason = str(self.store.get("current_reason") or "").strip()
+        out = f"你现在的心情：{mood}"
+        if score is not None:
+            out += f"（难受程度 {score}/100）"
+        if reason:
+            out += f"\n原因：{reason}"
+        out += "\n用你自己的口吻说出来就行，别照念这个格式。"
+        return out
+
     def _owner_qq(self) -> int | None:
         """取主人 QQ 号（用于定向私聊）。"""
         for word in self._owner_ids():
@@ -311,6 +354,7 @@ class QzoneMood(Star):
         self.store.set("current_mood", verdict["mood"])
         self.store.set("current_score", verdict["score"])
         self.store.set("current_reason", verdict["reason"])
+        self.store.set("last_mood_ts", time.time())
         logger.info(
             f"[qzone_mood] 自我感受 mood={verdict['mood']} score={verdict['score']} "
             f"broke={verdict['broke']} recharge={verdict['recharge']}"
@@ -452,6 +496,10 @@ class QzoneMood(Star):
             "· 充值：她读出来主人充了钱 / 额度到账，才发",
             "· 自由发帖：距上次满 " + str(interval) + " 小时，且有新消息",
             "",
+            "【想知道她心情？直接问，不用指令】",
+            "· 「你现在心情怎么样」「开心吗」→ 她会现场感受一遍再回答你",
+            "· 「刚才为什么难过」→ 她会说出自己的理由",
+            "",
             "【规则】",
             "· 自动触发之间至少隔 " + str(cooldown) + " 分钟",
             "· 断粮/充值只认主人：" + owner,
@@ -474,8 +522,6 @@ class QzoneMood(Star):
             + ("　⚠ 与配置不一致" if mismatch else ""),
             f"主人：{'、'.join(sorted(self._owner_ids())) or '未配置'}",
             f"总发送：{self.store.get('post_count', 0)} 条｜最近一次：{self.store.get('last_post_kind') or '还没发过'}",
-            f"她现在的心情：{self.store.get('current_mood') or '还没感受过'}"
-            + (f"（{self.store.get('current_score')} 分）" if self.store.get("current_score") is not None else ""),
             f"冷却：{'还剩 ' + str(left) + ' 分钟' if left else '已解除'}",
             f"表情包：{sum(len(v) for v in cats.values())} 个分类 / {len(cats)} 个包",
         ]
