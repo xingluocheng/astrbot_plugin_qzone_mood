@@ -33,6 +33,18 @@
 
 ---
 
+### 和自拍插件联动（可选）
+
+装了 [大肥鱼的自拍](https://github.com/xingluocheng/astrbot_plugin_selfie) 之后，主人点单可以配图：
+
+```
+/空间 今天去了海边        → 写文案 + 画一张海边的照片
+/空间 今天去了海边 不带图  → 只发文字和表情包
+/空间 今天去了海边 带图    → 强制画一张
+```
+
+自动触发不画图，省时间也省显卡。
+
 ## 三、安装
 
 ### 方式一：在 AstrBot 面板里装（推荐）
@@ -176,6 +188,11 @@ AstrBot/data/config/astrbot_plugin_qzone_mood_config.json
 
 ## 八、版本历史
 
+### 1.3.1 — 2026-11-08
+- **联动「大肥鱼的自拍」**：主人点单发说说时，可以让她按说说方向现画一张自己的照片当配图
+- 文案里写「带图」强制生成、「不带图」强制跳过，不写就按配置走
+- 自动触发（难过 / 断粮 / 自由发帖）不画图，省时间也省显卡
+
 ### 1.3.0 — 2026-11-04
 - **判断全交给她自己**：删掉难过 / 断粮 / 充值三套关键词，每攒够 8 条消息她读一遍上下文，
   自己感受心情、自己判断主人是不是断粮或充值，再决定发不发
@@ -217,6 +234,7 @@ https://github.com/xingluocheng/astrbot_plugin_qzone_mood
 
 - [大肥鱼的日记](https://github.com/xingluocheng/astrbot_plugin_diary) —— 把每天发生的事写成日记存到桌面，聊天时还会想起来
 - [大肥鱼的亲密度](https://github.com/xingluocheng/astrbot_plugin_intimacy) —— 按聊天天数推进关系，主人恒定最高
+- [大肥鱼的自拍](https://github.com/xingluocheng/astrbot_plugin_selfie) —— 聊天里她自己判断要不要拍照，自己写提示词出图（**本插件可联动它给说说配图**）
 
 ---
 
