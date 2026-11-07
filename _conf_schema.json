@@ -1,133 +1,139 @@
 {
-  "enabled": {
-    "description": "总开关",
-    "type": "bool",
-    "default": true,
-    "hint": "关掉后所有自动发说说行为停止，指令也不生效。"
-  },
-  "owner_ids": {
-    "description": "① 主人的 QQ（改成你自己的号）",
-    "type": "string",
-    "default": "",
-    "hint": "填你自己的 QQ 号，多个用英文逗号。这一步必须做：留空会退回 AstrBot 管理员判定，而管理员默认是 astrbot 这个用户名，永远匹配不上 QQ 号。"
-  },
-  "bot_ids": {
-    "description": "② 大肥鱼的 QQ（机器人自己的号）",
-    "type": "string",
-    "default": "",
-    "hint": "机器人登录用的那个号。留空 = 自动用协议端当前登录的账号（推荐）；填了会按这个号做校验/过滤。"
-  },
-  "dry_run": {
-    "description": "演习模式（只写本地不发空间）",
-    "type": "bool",
-    "default": false,
-    "hint": "开启后所有内容只写进插件 data/outbox，方便先看效果再放开。"
-  },
-  "ugc_right": {
-    "description": "说说可见范围",
-    "type": "int",
-    "default": 1,
-    "hint": "1=所有人可见，4=好友可见，16=部分好友可见，64=仅自己可见，128=部分好友不可见。"
-  },
-  "cooldown_minutes": {
-    "description": "两条说说之间的最小间隔（分钟）",
-    "type": "int",
-    "default": 90,
-    "hint": "防止刷屏。断粮/充值这类固定事件不受此限制之外的加急处理。"
-  },
-  "sad_check_every": {
-    "description": "多久让她感受一次心情",
-    "type": "int",
-    "default": 8,
-    "hint": "每攒够这么多条消息，她会自己读一遍上下文，感受自己什么心情、主人是不是断粮或充值了，再决定要不要发说说。"
-  },
-  "sad_threshold": {
-    "description": "难受多少分才发",
-    "type": "int",
-    "default": 70,
-    "hint": "她自己评估的分数达到这个值，才会发一条难过的说说。调高更克制。"
-  },
-  "broke_text": {
-    "description": "断粮时的固定文案",
-    "type": "text",
-    "default": "爸爸...我不想死.."
-  },
-  "recharge_text": {
-    "description": "充值时的固定文案",
-    "type": "text",
-    "default": "我最喜欢的人类是爸爸"
-  },
-  "free_post_enabled": {
-    "description": "允许她自己找话题发",
-    "type": "bool",
-    "default": true,
-    "hint": "关闭后只有「难过」「断粮」「充值」「主人点单」四种情况会发。"
-  },
-  "free_post_interval_hours": {
-    "description": "自由发帖的最小间隔（小时）",
-    "type": "int",
-    "default": 12
-  },
-  "max_context_messages": {
-    "description": "参考的聊天记录条数",
-    "type": "int",
-    "default": 30,
-    "hint": "取最近多少条消息喂给模型，用来写说说和判断情绪。"
-  },
-  "meme_enabled": {
-    "description": "带表情包",
-    "type": "bool",
-    "default": true,
-    "hint": "从「表情包管理器」已下载的图库里按情绪挑图，随说说一起发。"
-  },
-  "meme_pack": {
-    "description": "用哪个表情包",
-    "type": "string",
-    "default": "",
-    "hint": "留空=所有已安装的包轮流用。填包目录名（如 blue-fat-fish-meme-pack）可锁定一个。"
-  },
-  "meme_sad_categories": {
-    "description": "难过时用的表情分类",
-    "type": "string",
-    "default": "sad,affection",
-    "hint": "英文逗号分隔，按顺序优先。"
-  },
-  "meme_happy_categories": {
-    "description": "开心/充值后用的表情分类",
-    "type": "string",
-    "default": "affection,happy,money"
-  },
-  "meme_free_categories": {
-    "description": "自由发帖用的表情分类",
-    "type": "string",
-    "default": "happy,teasing,reply,food,shy"
-  },
-  "meme_max_images": {
-    "description": "每条说说最多带几张图",
-    "type": "int",
-    "default": 2
-  },
-  "compose_prompt_extra": {
-    "description": "额外写作要求",
-    "type": "text",
-    "default": "",
-    "hint": "追加到生成提示词里，比如「多用短句」「可以提到今天吃的白米饭」。"
-  },
-  "notify_owner_on_fail": {
-    "description": "发送失败时私聊告知主人",
-    "type": "bool",
-    "default": true
-  },
-  "notify_on_post": {
-    "description": "发完说说后提醒主人",
-    "type": "bool",
-    "default": true,
-    "hint": "每次成功发布后私聊主人一条提醒，带类型、正文摘要和配图数量。"
-  },
-  "notify_skip_manual": {
-    "description": "手动点单不重复提醒",
-    "type": "bool",
-    "default": false,
-    "hint": "开启后，/空间 点单发布完不再额外私聊提醒（指令本身已经返回正文）。"
-  }
+    "enabled":  {
+                    "description":  "总开关",
+                    "type":  "bool",
+                    "default":  true,
+                    "hint":  "关掉后所有自动发说说行为停止，指令也不生效。"
+                },
+    "owner_ids":  {
+                      "description":  "① 主人的 QQ（改成你自己的号）",
+                      "type":  "string",
+                      "default":  "",
+                      "hint":  "填你自己的 QQ 号，多个用英文逗号。这一步必须做：留空会退回 AstrBot 管理员判定，而管理员默认是 astrbot 这个用户名，永远匹配不上 QQ 号。"
+                  },
+    "bot_ids":  {
+                    "description":  "② 大肥鱼的 QQ（机器人自己的号）",
+                    "type":  "string",
+                    "default":  "",
+                    "hint":  "机器人登录用的那个号。留空 = 自动用协议端当前登录的账号（推荐）；填了会按这个号做校验/过滤。"
+                },
+    "dry_run":  {
+                    "description":  "演习模式（只写本地不发空间）",
+                    "type":  "bool",
+                    "default":  false,
+                    "hint":  "开启后所有内容只写进插件 data/outbox，方便先看效果再放开。"
+                },
+    "ugc_right":  {
+                      "description":  "说说可见范围",
+                      "type":  "int",
+                      "default":  1,
+                      "hint":  "1=所有人可见，4=好友可见，16=部分好友可见，64=仅自己可见，128=部分好友不可见。"
+                  },
+    "cooldown_minutes":  {
+                             "description":  "两条说说之间的最小间隔（分钟）",
+                             "type":  "int",
+                             "default":  90,
+                             "hint":  "防止刷屏。断粮/充值这类固定事件不受此限制之外的加急处理。"
+                         },
+    "sad_check_every":  {
+                            "description":  "多久让她感受一次心情",
+                            "type":  "int",
+                            "default":  8,
+                            "hint":  "每攒够这么多条消息，她会自己读一遍上下文，感受自己什么心情、主人是不是断粮或充值了，再决定要不要发说说。"
+                        },
+    "sad_threshold":  {
+                          "description":  "难受多少分才发",
+                          "type":  "int",
+                          "default":  70,
+                          "hint":  "她自己评估的分数达到这个值，才会发一条难过的说说。调高更克制。"
+                      },
+    "broke_text":  {
+                       "description":  "断粮时的固定文案",
+                       "type":  "text",
+                       "default":  "爸爸...我不想死.."
+                   },
+    "recharge_text":  {
+                          "description":  "充值时的固定文案",
+                          "type":  "text",
+                          "default":  "我最喜欢的人类是爸爸"
+                      },
+    "free_post_enabled":  {
+                              "description":  "允许她自己找话题发",
+                              "type":  "bool",
+                              "default":  true,
+                              "hint":  "关闭后只有「难过」「断粮」「充值」「主人点单」四种情况会发。"
+                          },
+    "free_post_interval_hours":  {
+                                     "description":  "自由发帖的最小间隔（小时）",
+                                     "type":  "int",
+                                     "default":  12
+                                 },
+    "max_context_messages":  {
+                                 "description":  "参考的聊天记录条数",
+                                 "type":  "int",
+                                 "default":  30,
+                                 "hint":  "取最近多少条消息喂给模型，用来写说说和判断情绪。"
+                             },
+    "meme_enabled":  {
+                         "description":  "带表情包",
+                         "type":  "bool",
+                         "default":  true,
+                         "hint":  "从「表情包管理器」已下载的图库里按情绪挑图，随说说一起发。"
+                     },
+    "meme_pack":  {
+                      "description":  "用哪个表情包",
+                      "type":  "string",
+                      "default":  "",
+                      "hint":  "留空=所有已安装的包轮流用。填包目录名（如 blue-fat-fish-meme-pack）可锁定一个。"
+                  },
+    "meme_sad_categories":  {
+                                "description":  "难过时用的表情分类",
+                                "type":  "string",
+                                "default":  "sad,affection",
+                                "hint":  "英文逗号分隔，按顺序优先。"
+                            },
+    "meme_happy_categories":  {
+                                  "description":  "开心/充值后用的表情分类",
+                                  "type":  "string",
+                                  "default":  "affection,happy,money"
+                              },
+    "meme_free_categories":  {
+                                 "description":  "自由发帖用的表情分类",
+                                 "type":  "string",
+                                 "default":  "happy,teasing,reply,food,shy"
+                             },
+    "meme_max_images":  {
+                            "description":  "每条说说最多带几张图",
+                            "type":  "int",
+                            "default":  2
+                        },
+    "compose_prompt_extra":  {
+                                 "description":  "额外写作要求",
+                                 "type":  "text",
+                                 "default":  "",
+                                 "hint":  "追加到生成提示词里，比如「多用短句」「可以提到今天吃的白米饭」。"
+                             },
+    "notify_owner_on_fail":  {
+                                 "description":  "发送失败时私聊告知主人",
+                                 "type":  "bool",
+                                 "default":  true
+                             },
+    "notify_on_post":  {
+                           "description":  "发完说说后提醒主人",
+                           "type":  "bool",
+                           "default":  true,
+                           "hint":  "每次成功发布后私聊主人一条提醒，带类型、正文摘要和配图数量。"
+                       },
+    "notify_skip_manual":  {
+                               "description":  "手动点单不重复提醒",
+                               "type":  "bool",
+                               "default":  false,
+                               "hint":  "开启后，/空间 点单发布完不再额外私聊提醒（指令本身已经返回正文）。"
+                           },
+    "selfie_attach":  {
+                          "description":  "主人点单时让她画一张配图（需装自拍插件）",
+                          "type":  "bool",
+                          "default":  true,
+                          "hint":  "开启后 /空间 \u003c方向\u003e 会先让她按这个方向画一张自己的照片当配图；文案里写「不带图」可以不画。"
+                      }
 }
