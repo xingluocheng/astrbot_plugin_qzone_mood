@@ -126,6 +126,51 @@ class QzoneMood(Star):
             logger.warning(f"[qzone_mood] 取模型失败：{exc}")
             return None
 
+    # ------------------------------------------------------------- 自拍插件联动
+    async def _maybe_selfie_image(self, text: str, kind: str, categories: list[str]) -> Path | None:
+        """主人点单时，问她要不要画一张图配这条说说。
+
+        规则：
+          - 只有主人点单（kind == owner）才画；
+          - 文案里写「不带图 / 纯文字」就跳过；写「带图 / 配图」就强制画；
+          - 其余情况看配置 selfie_attach 开关。
+        """
+        if kind != "owner":
+            return None
+
+        wants = self._cfg("selfie_attach", True)
+        tail = text or ""
+        if any(w in tail for w in ("不带图", "纯文字", "不要图")):
+            logger.info("[qzone_mood] 主人说不带图，跳过自拍配图")
+            return None
+        forced = any(w in tail for w in ("带图", "配图", "画一张"))
+        if not wants and not forced:
+            return None
+
+        try:
+            star = self.context.get_registered_star("astrbot_plugin_selfie")
+        except Exception:
+            star = None
+        if star is None:
+            logger.debug("[qzone_mood] 没装自拍插件，跳过配图")
+            return None
+
+        plugin = getattr(star, "star_cls", None) or star
+        maker = getattr(plugin, "make_post_image", None)
+        if maker is None:
+            return None
+
+        intent = (text or "").replace("带图", "").replace("配图", "").replace("画一张", "").strip()
+        intent = intent[:120] or "坐在窗边发呆，柔光"
+        try:
+            path = await maker(intent)
+        except Exception as exc:
+            logger.warning(f"[qzone_mood] 自拍配图失败：{exc}")
+            return None
+        if path:
+            logger.info(f"[qzone_mood] 已生成配图：{path}")
+        return path
+
     # ------------------------------------------------------------- 发说说的核
     async def _publish(self, event, text: str, categories: list[str], kind: str) -> dict:
         text = (text or "").strip()
@@ -140,7 +185,13 @@ class QzoneMood(Star):
             return {"ok": False, "via": "cooldown", "detail": "冷却中，已跳过"}
 
         images: list[Path] = []
-        if bool(self._cfg("meme_enabled", True)):
+
+        # 主人点单时，先问她要不要自己画一张配图（联动自拍插件）
+        selfie_img = await self._maybe_selfie_image(text, kind, categories)
+        if selfie_img is not None:
+            images.append(selfie_img)
+
+        if bool(self._cfg("meme_enabled", True)) and not images:
             try:
                 images = memes.pick_images(
                     self.plugin_data_dir,
